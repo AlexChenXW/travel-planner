@@ -1,18 +1,18 @@
-import { getPrisma } from "@/lib/db";
+import { getPool } from "@/lib/db";
 import { NextResponse } from "next/server";
+import type { RowDataPacket } from "mysql2";
 
 export async function GET() {
-  const prisma = getPrisma();
-  const conversations = await prisma.conversation.findMany({
-    orderBy: { updatedAt: "desc" },
-    include: { messages: { orderBy: { createdAt: "desc" }, take: 1 } },
-  });
-  return NextResponse.json(conversations);
+  const db = getPool();
+  const [rows] = await db.execute<RowDataPacket[]>(
+    "SELECT c.*, (SELECT content FROM Message WHERE conversationId = c.id ORDER BY createdAt DESC LIMIT 1) as lastMessage FROM Conversation c ORDER BY c.updatedAt DESC"
+  );
+  return NextResponse.json(rows);
 }
 
 export async function DELETE(req: Request) {
-  const prisma = getPrisma();
+  const db = getPool();
   const { id } = await req.json();
-  await prisma.conversation.delete({ where: { id } });
+  await db.execute("DELETE FROM Conversation WHERE id = ?", [id]);
   return NextResponse.json({ ok: true });
 }

@@ -1,11 +1,15 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { PrismaClient } from "@/generated/prisma/client";
+import mysql from "mysql2/promise";
 
-let _prisma: any;
+let pool: mysql.Pool;
 
-export function getPrisma() {
-  if (!_prisma) {
-    _prisma = new (PrismaClient as any)();
+export function getPool() {
+  if (!pool) {
+    pool = mysql.createPool({
+      uri: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false },
+      waitForConnections: true,
+      connectionLimit: 5,
+    });
   }
-  return _prisma;
+  return pool;
 }

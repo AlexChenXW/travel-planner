@@ -1,16 +1,24 @@
-import { getPrisma } from "@/lib/db";
+import { getPool } from "@/lib/db";
 import { NextResponse } from "next/server";
+import type { RowDataPacket } from "mysql2";
 
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const prisma = getPrisma();
+  const db = getPool();
   const { id } = await params;
-  const conversation = await prisma.conversation.findUnique({
-    where: { id: parseInt(id) },
-    include: { messages: { orderBy: { createdAt: "asc" } } },
-  });
-  if (!conversation) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  return NextResponse.json(conversation);
+
+  const [convs] = await db.execute<RowDataPacket[]>(
+    "SELECT * FROM Conversation WHERE id = ?",
+    [parseInt(id)]
+  );
+  if (convs.length === 0) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  const [messages] = await db.execute<RowDataPacket[]>(
+    "SELECT * FROM Message WHERE conversationId = ? ORDER BY createdAt ASC",
+    [parseInt(id)]
+  );
+
+  return NextResponse.json({ ...convs[0], messages });
 }

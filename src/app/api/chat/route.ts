@@ -1,43 +1,51 @@
 import OpenAI from "openai";
-import { getPrisma } from "@/lib/db";
+import { getPool } from "@/lib/db";
 import { buildSystemPrompt } from "@/lib/system-prompt";
+import type { RowDataPacket, ResultSetHeader } from "mysql2";
 
 export async function POST(req: Request) {
-  const prisma = getPrisma();
+  const db = getPool();
   const { conversationId, message } = await req.json();
 
-  let conversation = conversationId
-    ? await prisma.conversation.findUnique({
-        where: { id: conversationId },
-        include: { messages: { orderBy: { createdAt: "asc" } } },
-      })
-    : null;
+  let convId = conversationId as number | null;
+  let existingMessages: { role: string; content: string }[] = [];
 
-  const profile = await prisma.profile.findFirst();
-  const systemPrompt = profile ? buildSystemPrompt(profile) : buildSystemPrompt({
-    departureCities: "深圳/香港/广州",
-    preferences: "{}",
-    constraints: "{}",
-    visitedPlaces: "[]",
-    feedback: "[]",
-  });
-
-  if (!conversation) {
-    conversation = await prisma.conversation.create({
-      data: { title: message.slice(0, 30) },
-      include: { messages: true },
-    });
+  if (convId) {
+    const [rows] = await db.execute<RowDataPacket[]>(
+      "SELECT role, content FROM Message WHERE conversationId = ? ORDER BY createdAt ASC",
+      [convId]
+    );
+    existingMessages = rows as { role: string; content: string }[];
   }
 
-  await prisma.message.create({
-    data: { conversationId: conversation.id, role: "user", content: message },
-  });
+  const [profileRows] = await db.execute<RowDataPacket[]>("SELECT * FROM Profile LIMIT 1");
+  const profile = profileRows[0] as any;
+  const systemPrompt = profile
+    ? buildSystemPrompt(profile)
+    : buildSystemPrompt({
+        departureCities: "深圳/香港/广州",
+        preferences: "{}",
+        constraints: "{}",
+        visitedPlaces: "[]",
+        feedback: "[]",
+      });
+
+  if (!convId) {
+    const [result] = await db.execute<ResultSetHeader>(
+      "INSERT INTO Conversation (title) VALUES (?)",
+      [message.slice(0, 30)]
+    );
+    convId = result.insertId;
+  }
+
+  await db.execute("INSERT INTO Message (conversationId, role, content) VALUES (?, ?, ?)", [
+    convId,
+    "user",
+    message,
+  ]);
 
   const allMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
-    ...(conversation.messages || []).map((m: { role: string; content: string }) => ({
-      role: m.role as "user" | "assistant",
-      content: m.content,
-    })),
+    ...existingMessages.map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),
     { role: "user" as const, content: message },
   ];
 
@@ -48,10 +56,7 @@ export async function POST(req: Request) {
 
   const stream = await client.chat.completions.create({
     model: "glm-4-plus",
-    messages: [
-      { role: "system", content: systemPrompt },
-      ...allMessages,
-    ],
+    messages: [{ role: "system", content: systemPrompt }, ...allMessages],
     stream: true,
   });
 
@@ -69,10 +74,14 @@ export async function POST(req: Request) {
           }
         }
 
-        await getPrisma().message.create({
-          data: { conversationId: conversation!.id, role: "assistant", content: fullResponse },
-        });
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ done: true, conversationId: conversation!.id })}\n\n`));
+        await db.execute("INSERT INTO Message (conversationId, role, content) VALUES (?, ?, ?)", [
+          convId,
+          "assistant",
+          fullResponse,
+        ]);
+        controller.enqueue(
+          encoder.encode(`data: ${JSON.stringify({ done: true, conversationId: convId })}\n\n`)
+        );
         controller.close();
       } catch (err: any) {
         controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: err.message })}\n\n`));
