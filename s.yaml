@@ -1,0 +1,46 @@
+edition: 3.0.0
+name: travel-planner
+access: default
+
+vars:
+  region: cn-shenzhen
+
+resources:
+  travel-planner:
+    component: fc3
+    props:
+      region: ${vars.region}
+      functionName: travel-planner
+      description: 旅行规划助手
+      runtime: custom.debian10
+      cpu: 1
+      memorySize: 2048
+      diskSize: 10240
+      timeout: 60
+      initTimeout: 120
+      environmentVariables:
+        DATABASE_URL: mysql://shallwechen:4tITsMymIZ87AI29@mysql6.sqlpub.com:3311/personal_knowledge
+        GLM_API_KEY: 04714598246041858dee362516db2dce.YKPwCp8lQ5z8ya60
+        DS_API_KEY: sk-8c81b8072d8c4b97a36cc36e4caa3d19
+        NODE_ENV: production
+        PORT: "3000"
+      customRuntimeConfig:
+        command:
+          - bash
+          - bootstrap
+        port: 3000
+      code: .fc-deploy
+      logConfig: auto
+      triggers:
+        - triggerName: httpTrigger
+          triggerType: http
+          triggerConfig:
+            authType: anonymous
+            methods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - PATCH
+              - HEAD
+              - OPTIONS

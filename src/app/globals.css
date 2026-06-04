@@ -31,8 +31,8 @@ body {
 .msg-md ul, .msg-md ol { margin: 0.4em 0; padding-left: 1.4em; }
 .msg-md li { margin-bottom: 0.2em; }
 .msg-md li::marker { color: var(--color-primary); }
-.msg-md table { border-collapse: collapse; width: 100%; margin: 0.6em 0; font-size: 0.8rem; }
-.msg-md th, .msg-md td { border: 1px solid var(--color-border); padding: 6px 10px; text-align: left; }
+.msg-md table { border-collapse: collapse; width: 100%; margin: 0.6em 0; font-size: 0.8rem; display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.msg-md th, .msg-md td { border: 1px solid var(--color-border); padding: 6px 10px; text-align: left; white-space: nowrap; }
 .msg-md th { background: #f2f2f7; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.02em; }
 .msg-md strong { font-weight: 600; color: #000; }
 .msg-md h2 { font-size: 1rem; font-weight: 700; margin: 0.8em 0 0.3em; }
@@ -52,8 +52,30 @@ body {
 
 /* --- Sidebar transition --- */
 .sidebar-backdrop { transition: opacity 0.25s ease; }
-.sidebar-panel { transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+.sidebar-panel { transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1); will-change: transform; }
 
-/* --- Safe area for notched phones --- */
+/* --- Confirm dialog animation --- */
+@keyframes confirm-enter {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+.confirm-dialog { animation: confirm-enter 0.2s cubic-bezier(0.2, 0, 0, 1); }
+
+/* --- Voice recording rings --- */
+@keyframes voice-ring {
+  0% { transform: scale(1); opacity: 0.6; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+.voice-ring-active::before, .voice-ring-active::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(239,68,68,0.5);
+  animation: voice-ring 1.5s ease-out infinite;
+}
+.voice-ring-active::after { animation-delay: 0.5s; }
+
+textarea { word-break: break-all; }
 .safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
 .safe-top { padding-top: env(safe-area-inset-top, 0px); }
