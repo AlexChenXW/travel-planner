@@ -1,6 +1,0 @@
-1:"$Sreact.fragment"
-2:I[73688,["/travel-planner/_next/static/chunks/0zg2h5d~np3ub.js"],"ViewportBoundary"]
-3:I[73688,["/travel-planner/_next/static/chunks/0zg2h5d~np3ub.js"],"MetadataBoundary"]
-4:"$Sreact.suspense"
-5:I[11852,["/travel-planner/_next/static/chunks/0zg2h5d~np3ub.js"],"IconMark"]
-0:{"rsc":["$","$1","h",{"children":[null,["$","$L2",null,{"children":[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"}],["$","meta","2",{"name":"theme-color","content":"#1e40af"}]]}],["$","div",null,{"hidden":true,"children":["$","$L3",null,{"children":["$","$4",null,{"name":"Next.Metadata","children":[["$","title","0",{"children":"旅行规划助手"}],["$","meta","1",{"name":"description","content":"Alex 的智能旅行顾问"}],["$","link","2",{"rel":"manifest","href":"/manifest.json"}],["$","meta","3",{"name":"mobile-web-app-capable","content":"yes"}],["$","meta","4",{"name":"apple-mobile-web-app-title","content":"旅行助手"}],["$","meta","5",{"name":"apple-mobile-web-app-status-bar-style","content":"default"}],["$","link","6",{"rel":"icon","href":"/travel-planner/favicon.ico?favicon.0x3dzn~oxb6tn.ico","sizes":"256x256","type":"image/x-icon"}],["$","$L5","7",{}]]}]}]}],null]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"ZQLmXf6HVrMfREoy_CToZ"}
